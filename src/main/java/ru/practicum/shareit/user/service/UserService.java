@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserDTO;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
@@ -28,29 +28,29 @@ public class UserService {
         this.userMapper = userMapper;
     }
 
-    public User addUser(UserDto userDto) {
+    public UserDTO addUser(UserDTO userDto) {
         User user = userMapper.toModel(userDto);
         checkDuplicateEmail(user);
 
         log.info("Adding user");
 
-        return userRepository.addUser(user);
+        return userMapper.toDTO(userRepository.addUser(user));
     }
 
-    public User getUserById(long userId) {
+    public UserDTO getUserById(long userId) {
         log.info("Getting user with ID: {}", userId);
 
-        return userRepository.findUserById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        return userMapper.toDTO(userRepository.findUserById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found")));
     }
 
-    public List<User> getAllUsers() {
+    public List<UserDTO> getAllUsers() {
         log.info("Getting all users");
 
-        return userRepository.findAllUsers();
+        return userMapper.toDTOList(userRepository.findAllUsers());
     }
 
-    public User updateUser(long userId, UserDto userDto) {
+    public UserDTO updateUser(long userId, UserDTO userDto) {
         User updatedUser = userMapper.toModel(userDto);
 
         checkDuplicateEmail(updatedUser);
@@ -58,7 +58,7 @@ public class UserService {
 
         log.info("Updating user with ID: {}", userId);
 
-        return userRepository.updateUser(updatedUser);
+        return userMapper.toDTO(userRepository.updateUser(updatedUser));
     }
 
     public void removeUserById(long userId) {
@@ -85,6 +85,7 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         user.setId(userId);
+        user.setItemIds(oldUser.getItemIds());
 
         if (user.getName() == null) {
             user.setName(oldUser.getName());

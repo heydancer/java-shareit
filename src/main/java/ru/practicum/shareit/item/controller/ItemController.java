@@ -11,8 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.dto.ItemDTO;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
@@ -30,28 +29,28 @@ public class ItemController {
     }
 
     @PostMapping
-    public Item createItem(@RequestHeader(SHARER_USER_ID) long userId, @Valid @RequestBody ItemDto itemDto) {
+    public ItemDTO createItem(@RequestHeader(SHARER_USER_ID) long userId, @Valid @RequestBody ItemDTO itemDto) {
         return itemService.addItem(userId, itemDto);
     }
 
     @GetMapping
-    public List<Item> getItemsByUserId(@RequestHeader(SHARER_USER_ID) long userId) {
+    public List<ItemDTO> getItemsByUserId(@RequestHeader(SHARER_USER_ID) long userId) {
         return itemService.getItemsByUserId(userId);
     }
 
     @GetMapping("/{itemId}")
-    public Item getItem(@PathVariable long itemId) {
+    public ItemDTO getItem(@PathVariable long itemId) {
         return itemService.getById(itemId);
     }
 
     @GetMapping("/search")
-    public List<Item> search(@RequestParam String text) {
+    public List<ItemDTO> search(@RequestParam String text) {
         return itemService.getItemsByText(text);
     }
 
     @PatchMapping("/{itemId}")
-    public Item updateItem(@RequestHeader(SHARER_USER_ID) long userId, @PathVariable long itemId,
-                           @RequestBody ItemDto itemDto) {
+    public ItemDTO updateItem(@RequestHeader(SHARER_USER_ID) long userId, @PathVariable long itemId,
+                           @RequestBody ItemDTO itemDto) {
         return itemService.updateItem(userId, itemId, itemDto);
     }
 

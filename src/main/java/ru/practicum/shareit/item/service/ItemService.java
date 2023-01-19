@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDTO;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -30,7 +30,7 @@ public class ItemService {
         this.itemMapper = itemMapper;
     }
 
-    public Item addItem(long userId, ItemDto itemDto) {
+    public ItemDTO addItem(long userId, ItemDTO itemDto) {
         User user = userRepository.findUserById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
@@ -41,42 +41,42 @@ public class ItemService {
 
         log.info("Adding item");
 
-        return itemRepository.addItem(item, user);
+        return itemMapper.toDTO(itemRepository.addItem(item, user));
     }
 
-    public Item getById(long itemId) {
+    public ItemDTO getById(long itemId) {
         log.info("Getting item with ID: {}", itemId);
 
-        return itemRepository.findItem(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found"));
+        return itemMapper.toDTO(itemRepository.findItem(itemId)
+                .orElseThrow(() -> new NotFoundException("Item not found")));
     }
 
-    public List<Item> getItemsByUserId(long userId) {
+    public List<ItemDTO> getItemsByUserId(long userId) {
         userRepository.findUserById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         log.info("Getting all items by user ID: {}", userId);
 
-        return itemRepository.findItemsByUserId(userId);
+        return itemMapper.toDTOList(itemRepository.findItemsByUserId(userId));
     }
 
-    public List<Item> getItemsByText(String text) {
+    public List<ItemDTO> getItemsByText(String text) {
         log.info("Getting all items by text: {}", text);
 
         if (StringUtils.isEmpty(text)) {
             return List.of();
         }
 
-        return itemRepository.findItems(text);
+        return itemMapper.toDTOList(itemRepository.findItems(text));
     }
 
-    public Item updateItem(long userId, long itemId, ItemDto itemDto) {
+    public ItemDTO updateItem(long userId, long itemId, ItemDTO itemDto) {
         Item updatedItem = itemMapper.toModel(itemDto);
         checkForUpdate(userId, itemId, updatedItem);
 
         log.info("Updating item with ID: {}", itemId);
 
-        return itemRepository.updateItemByUserId(updatedItem);
+        return itemMapper.toDTO(itemRepository.updateItemByUserId(updatedItem));
     }
 
     public void removeItemById(long userId, long itemId) {
@@ -92,7 +92,7 @@ public class ItemService {
         }
     }
 
-    private void validate(ItemDto itemDto) {
+    private void validate(ItemDTO itemDto) {
         if (itemDto.getAvailable() == null) {
             throw new BadRequestException("Available cannot be null");
         }
