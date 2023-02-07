@@ -1,12 +1,12 @@
 package ru.practicum.shareit.item.mapper;
 
-import org.springframework.stereotype.Component;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import ru.practicum.shareit.common.BaseMapper;
 import ru.practicum.shareit.item.dto.ItemDTO;
 import ru.practicum.shareit.item.model.Item;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
 @Component
 public class ItemMapper implements BaseMapper<ItemDTO, Item> {

@@ -1,63 +1,113 @@
 package ru.practicum.shareit.item.service;
 
-import org.apache.commons.lang3.StringUtils;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.CommentDTO;
+import ru.practicum.shareit.item.dto.ItemDTO;
+import ru.practicum.shareit.item.mapper.CommentMapper;
+import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.CommentRepository;
+import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.BadRequestException;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.ItemDTO;
-import ru.practicum.shareit.item.mapper.ItemMapper;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserRepository;
+import org.apache.commons.lang3.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ItemService {
     private static final Logger log = LoggerFactory.getLogger(ItemService.class);
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
+    private final BookingMapper bookingMapper;
+    private final CommentMapper commentMapper;
     private final ItemMapper itemMapper;
 
     @Autowired
-    public ItemService(ItemRepository itemRepository, UserRepository userRepository, ItemMapper itemMapper) {
+    public ItemService(ItemRepository itemRepository,
+                       UserRepository userRepository,
+                       BookingRepository bookingRepository,
+                       CommentRepository commentRepository,
+                       BookingMapper bookingMapper,
+                       CommentMapper commentMapper,
+                       ItemMapper itemMapper) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
+        this.bookingMapper = bookingMapper;
+        this.commentMapper = commentMapper;
         this.itemMapper = itemMapper;
     }
 
     public ItemDTO addItem(long userId, ItemDTO itemDto) {
-        User user = userRepository.findUserById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        validate(itemDto);
-
         Item item = itemMapper.toModel(itemDto);
-        item.setUserId(userId);
+        validate(item, userId);
 
         log.info("Adding item");
 
-        return itemMapper.toDTO(itemRepository.addItem(item, user));
+        return itemMapper.toDTO(itemRepository.save(item));
     }
 
-    public ItemDTO getById(long itemId) {
+    public CommentDTO addComment(long userId, long itemId, CommentDTO commentDTO) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item not found"));
+
+        List<Booking> bookings = bookingRepository.findAllByBookerAndItem(userId, itemId, LocalDateTime.now());
+
+        if (bookings.isEmpty()) {
+            throw new BadRequestException("Booking not made");
+        } else {
+            log.info("Adding comment");
+
+            Comment comment = commentMapper.toModel(commentDTO);
+            comment.setAuthor(user);
+            comment.setItem(item);
+            comment.setCreated(LocalDateTime.now());
+
+            return commentMapper.toDTO(commentRepository.save(comment));
+        }
+    }
+
+    public ItemDTO getById(long userId, long itemId) {
         log.info("Getting item with ID: {}", itemId);
 
-        return itemMapper.toDTO(itemRepository.findItem(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found")));
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item not found"));
+
+        ItemDTO itemDTO = itemMapper.toDTO(item);
+
+        if (item.getOwner().getId() == userId) {
+            setBooking(itemDTO, itemId);
+        }
+
+        itemDTO.setComments(commentMapper.toDTOList(commentRepository.findAllByItemId(itemId)));
+
+        return itemDTO;
     }
 
     public List<ItemDTO> getItemsByUserId(long userId) {
-        userRepository.findUserById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
         log.info("Getting all items by user ID: {}", userId);
 
-        return itemMapper.toDTOList(itemRepository.findItemsByUserId(userId));
+        List<ItemDTO> items = itemMapper.toDTOList(itemRepository.findAllByOwnerId(userId));
+        items.forEach(itemDTO -> setBooking(itemDTO, itemDTO.getId()));
+
+        return items;
     }
 
     public List<ItemDTO> getItemsByText(String text) {
@@ -67,65 +117,70 @@ public class ItemService {
             return List.of();
         }
 
-        return itemMapper.toDTOList(itemRepository.findItems(text));
+        return itemMapper.toDTOList(itemRepository.search(text.toLowerCase()));
     }
 
     public ItemDTO updateItem(long userId, long itemId, ItemDTO itemDto) {
-        Item updatedItem = itemMapper.toModel(itemDto);
-        checkForUpdate(userId, itemId, updatedItem);
+        Item item = itemMapper.toModel(itemDto);
+        checkForUpdate(userId, itemId, item);
 
         log.info("Updating item with ID: {}", itemId);
 
-        return itemMapper.toDTO(itemRepository.updateItemByUserId(updatedItem));
+        return itemMapper.toDTO(itemRepository.save(item));
     }
 
     public void removeItemById(long userId, long itemId) {
-        User user = userRepository.findUserById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        if (user.getItemIds().remove(itemId)) {
-            log.info("Removing item with ID: {}", itemId);
-
-            itemRepository.deleteItemById(itemId);
-        } else {
-            throw new NotFoundException("Item not found");
-        }
+        itemRepository.deleteById(itemId);
     }
 
-    private void validate(ItemDTO itemDto) {
-        if (itemDto.getAvailable() == null) {
+    private void validate(Item item, long userId) {
+        if (item.getAvailable() == null) {
             throw new BadRequestException("Available cannot be null");
-        }
-        if (itemDto.getDescription() == null) {
+        } else if (item.getDescription() == null) {
             throw new BadRequestException("Description cannot be null");
+        } else {
+            item.setOwner(userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("User not found")));
         }
     }
 
     private void checkForUpdate(long userId, long itemId, Item item) {
-        User user = userRepository.findUserById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        Item oldItem = itemRepository.findItem(itemId)
-                .orElseThrow(() -> new NullPointerException("Item not found"));
 
-        if (user.getItemIds().contains(itemId)) {
-            item.setId(oldItem.getId());
-            item.setUserId(oldItem.getUserId());
+        Item itemBeforeUpdate = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item not found"));
+
+        if (itemBeforeUpdate.getOwner().equals(user)) {
+            item.setId(itemId);
+            item.setOwner(user);
 
             if (item.getName() == null && item.getDescription() == null) {
-                item.setName(oldItem.getName());
-                item.setDescription(oldItem.getDescription());
+                item.setName(itemBeforeUpdate.getName());
+                item.setDescription(itemBeforeUpdate.getDescription());
 
             } else if (item.getName() == null && item.getAvailable() == null) {
-                item.setName(oldItem.getName());
-                item.setAvailable(oldItem.getAvailable());
+                item.setName(itemBeforeUpdate.getName());
+                item.setAvailable(itemBeforeUpdate.getAvailable());
 
             } else if (item.getDescription() == null && item.getAvailable() == null) {
-                item.setDescription(oldItem.getDescription());
-                item.setAvailable(oldItem.getAvailable());
+                item.setDescription(itemBeforeUpdate.getDescription());
+                item.setAvailable(itemBeforeUpdate.getAvailable());
             }
 
         } else {
-            throw new NotFoundException("User does not store item with ID: " + itemId);
+            throw new NotFoundException("Item does not belong to the user");
         }
+    }
+
+    private void setBooking(ItemDTO itemDTO, long itemId) {
+        Optional<Booking> lastBooking = bookingRepository.findLastBooking(itemId, LocalDateTime.now());
+        Optional<Booking> nextBooking = bookingRepository.findNextBooking(itemId, LocalDateTime.now());
+
+        lastBooking.ifPresent(booking -> itemDTO.setLastBooking(bookingMapper.toSimpleDTO(booking)));
+        nextBooking.ifPresent(booking -> itemDTO.setNextBooking(bookingMapper.toSimpleDTO(booking)));
     }
 }

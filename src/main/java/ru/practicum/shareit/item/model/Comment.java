@@ -15,6 +15,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Column;
 import javax.persistence.ManyToOne;
 import javax.persistence.JoinColumn;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Getter
@@ -23,38 +24,38 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "items")
-public class Item {
+@Table(name = "comments")
+public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "text")
+    private String text;
 
-    @Column(name = "name")
-    private String name;
-
-    @Column(name = "description")
-    private String description;
-
-    @Column(name = "is_available")
-    private Boolean available;
+    @Column(name = "created")
+    private LocalDateTime created;
 
     @ManyToOne
-    @JoinColumn(name = "owner_id")
-    private User owner;
+    @JoinColumn(name = "item_id")
+    private Item item;
+
+    @ManyToOne
+    @JoinColumn(name = "author_id")
+    private User author;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Item item = (Item) o;
-        return Objects.equals(id, item.id) && Objects.equals(name, item.name)
-                && Objects.equals(description, item.description)
-                && Objects.equals(available, item.available)
-                && Objects.equals(owner, item.owner);
+        Comment comment = (Comment) o;
+        return Objects.equals(id, comment.id) && Objects.equals(text, comment.text)
+                && Objects.equals(created, comment.created)
+                && Objects.equals(item, comment.item)
+                && Objects.equals(author, comment.author);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, available, owner);
+        return Objects.hash(id, text, created, item, author);
     }
 }
