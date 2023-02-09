@@ -41,9 +41,17 @@ public class BookingService {
     }
 
     public BookingDTO addBooking(long userId, BookingDTO bookingDto) {
-        Booking booking = bookingMapper.toModel(bookingDto);
+        User booker = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Item item = itemRepository.findById(bookingDto.getItemId())
+                .orElseThrow(() -> new NotFoundException("Item not found"));
 
-        validate(booking, userId, bookingDto.getItemId());
+        validate(bookingDto, booker, item);
+
+        Booking booking = bookingMapper.toModel(bookingDto);
+        booking.setBooker(booker);
+        booking.setItem(item);
+        booking.setStatus(BookingStatus.WAITING);
 
         log.info("Adding booking");
 
@@ -58,7 +66,7 @@ public class BookingService {
 
         if (checkOwnerItem(owner, booking)) {
             if (status && booking.getStatus().equals(BookingStatus.APPROVED)) {
-                throw new BadRequestException("уже апрувнут");
+                throw new BadRequestException("Booking is already APPROVED");
             } else if (status) {
                 booking.setStatus(BookingStatus.APPROVED);
                 bookingRepository.save(booking);
@@ -72,10 +80,6 @@ public class BookingService {
         return bookingMapper.toDTO(booking);
     }
 
-
-    /*Получение данных о конкретном бронировании (включая его статус).
-    Может быть выполнено либо автором бронирования, либо владельцем вещи,
-    к которой относится бронирование. Эндпоинт — GET /bookings/{bookingId}.*/
     public BookingDTO getBooking(long userId, long bookingId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
@@ -98,29 +102,16 @@ public class BookingService {
         return user.equals(booking.getBooker());
     }
 
-    private void validate(Booking booking, long userId, long itemId) {
-        User booker = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found"));
-
-        if (booking.getEnd().isBefore(LocalDateTime.now()) || booking.getEnd().isBefore(booking.getStart())
-                || booking.getStart().isBefore(LocalDateTime.now())) {
+    private void validate(BookingDTO bookingDTO, User booker, Item item) {
+        if (bookingDTO.getEnd().isBefore(LocalDateTime.now()) || bookingDTO.getEnd().isBefore(bookingDTO.getStart())
+                || bookingDTO.getStart().isBefore(LocalDateTime.now())) {
             throw new BookingDateTimeException("Incorrect date or time for booking");
 
-        } else {
+        } else if (item.getOwner().equals(booker)) {
+            throw new NotFoundException("Owner cannot book his item");
 
-            if (!item.getOwner().equals(booker)) {
-                if (item.getAvailable()) {
-                    booking.setBooker(booker);
-                    booking.setItem(item);
-                    booking.setStatus(BookingStatus.WAITING);
-                } else {
-                    throw new BadRequestException("Item available should be true");
-                }
-            } else {
-                throw new NotFoundException("Owner cannot book his item");
-            }
+        } else if (!item.getAvailable()) {
+            throw new BadRequestException("Item available should be true");
         }
     }
 

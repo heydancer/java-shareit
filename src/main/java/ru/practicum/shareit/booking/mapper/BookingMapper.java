@@ -16,7 +16,6 @@ public class BookingMapper implements BaseMapper<BookingDTO, Booking> {
         return Booking.builder()
                 .start(bookingDto.getStart())
                 .end(bookingDto.getEnd())
-                .status(bookingDto.getStatus())
                 .build();
     }
 
