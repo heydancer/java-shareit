@@ -3,11 +3,12 @@ package ru.practicum.shareit.booking.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingDTO;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.BookingDateTimeException;
@@ -94,6 +95,49 @@ public class BookingService {
         }
     }
 
+    public List<BookingDTO> getAllByBookerId(long userId, String state, Pageable pageable) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        switch (state) {
+            case "ALL":
+                return bookingMapper.toDTOList(bookingRepository.findAllByBookerIdOrderByStartDesc(userId, pageable));
+            case "CURRENT":
+                return bookingMapper.toDTOList(bookingRepository.findAllByBookerCurrentState(userId, LocalDateTime.now(), pageable));
+            case "PAST":
+                return bookingMapper.toDTOList(bookingRepository.findAllByBookerPastState(userId, LocalDateTime.now(), pageable));
+            case "FUTURE":
+                return bookingMapper.toDTOList(bookingRepository.findAllByBookerFutureState(userId, LocalDateTime.now(), pageable));
+            case "WAITING":
+                return bookingMapper.toDTOList(bookingRepository.findAllByBookerAndStatus(userId, BookingStatus.WAITING, pageable));
+            case "REJECTED":
+                return bookingMapper.toDTOList(bookingRepository.findAllByBookerAndStatus(userId, BookingStatus.REJECTED, pageable));
+            default:
+                throw new UnsupportedStatusException("Incorrect state");
+        }
+    }
+
+    public List<BookingDTO> getAllByOwnerId(long userId, String state, Pageable pageable) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        switch (state) {
+            case "ALL":
+                return bookingMapper.toDTOList(bookingRepository.findAllByItemOwnerIdOrderByStartDesc(userId, pageable));
+            case "CURRENT":
+                return bookingMapper.toDTOList(bookingRepository.findAllByOwnerCurrentState(userId, LocalDateTime.now(), pageable));
+            case "PAST":
+                return bookingMapper.toDTOList(bookingRepository.findAllByOwnerPastState(userId, LocalDateTime.now(), pageable));
+            case "FUTURE":
+                return bookingMapper.toDTOList(bookingRepository.findAllByOwnerFutureState(userId, LocalDateTime.now(), pageable));
+            case "WAITING":
+                return bookingMapper.toDTOList(bookingRepository.findAllByOwnerAndStatus(userId, BookingStatus.WAITING, pageable));
+            case "REJECTED":
+                return bookingMapper.toDTOList(bookingRepository.findAllByOwnerAndStatus(userId, BookingStatus.REJECTED, pageable));
+            default:
+                throw new UnsupportedStatusException("Incorrect state");
+        }
+    }
+
     private boolean checkOwnerItem(User user, Booking booking) {
         return user.equals(booking.getItem().getOwner());
     }
@@ -112,49 +156,6 @@ public class BookingService {
 
         } else if (!item.getAvailable()) {
             throw new BadRequestException("Item available should be true");
-        }
-    }
-
-    public List<BookingDTO> getAllByBookerId(long userId, String state) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        switch (state) {
-            case "ALL":
-                return bookingMapper.toDTOList(bookingRepository.findAllByBookerIdOrderByStartDesc(userId));
-            case "CURRENT":
-                return bookingMapper.toDTOList(bookingRepository.findAllByBookerCurrentState(userId, LocalDateTime.now()));
-            case "PAST":
-                return bookingMapper.toDTOList(bookingRepository.findAllByBookerPastState(userId, LocalDateTime.now()));
-            case "FUTURE":
-                return bookingMapper.toDTOList(bookingRepository.findAllByBookerFutureState(userId, LocalDateTime.now()));
-            case "WAITING":
-                return bookingMapper.toDTOList(bookingRepository.findAllByBookerAndStatus(userId, BookingStatus.WAITING));
-            case "REJECTED":
-                return bookingMapper.toDTOList(bookingRepository.findAllByBookerAndStatus(userId, BookingStatus.REJECTED));
-            default:
-                throw new UnsupportedStatusException("Incorrect state");
-        }
-    }
-
-    public List<BookingDTO> getAllByOwnerId(long userId, String state) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        switch (state) {
-            case "ALL":
-                return bookingMapper.toDTOList(bookingRepository.findAllByItemOwnerIdOrderByStartDesc(userId));
-            case "CURRENT":
-                return bookingMapper.toDTOList(bookingRepository.findAllByOwnerCurrentState(userId, LocalDateTime.now()));
-            case "PAST":
-                return bookingMapper.toDTOList(bookingRepository.findAllByOwnerPastState(userId, LocalDateTime.now()));
-            case "FUTURE":
-                return bookingMapper.toDTOList(bookingRepository.findAllByOwnerFutureState(userId, LocalDateTime.now()));
-            case "WAITING":
-                return bookingMapper.toDTOList(bookingRepository.findAllByOwnerAndStatus(userId, BookingStatus.WAITING));
-            case "REJECTED":
-                return bookingMapper.toDTOList(bookingRepository.findAllByOwnerAndStatus(userId, BookingStatus.REJECTED));
-            default:
-                throw new UnsupportedStatusException("Incorrect state");
         }
     }
 }

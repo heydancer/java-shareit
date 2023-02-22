@@ -1,24 +1,25 @@
 package ru.practicum.shareit.exception.handler;
 
-import ru.practicum.shareit.item.controller.ItemController;
-import ru.practicum.shareit.user.controller.UserController;
-import ru.practicum.shareit.booking.controller.BookingController;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.BadRequestException;
-import ru.practicum.shareit.exception.UnsupportedStatusException;
-import ru.practicum.shareit.exception.BookingDateTimeException;
-import ru.practicum.shareit.exception.ValidationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ru.practicum.shareit.booking.controller.BookingController;
+import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.exception.BookingDateTimeException;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.UnsupportedStatusException;
+import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.controller.ItemController;
+import ru.practicum.shareit.request.controller.RequestController;
+import ru.practicum.shareit.user.controller.UserController;
 
 import java.util.Objects;
 
-@RestControllerAdvice(assignableTypes = {ItemController.class, UserController.class, BookingController.class})
+@RestControllerAdvice(assignableTypes = {ItemController.class, UserController.class, BookingController.class, RequestController.class})
 public class ErrorHandler {
     private static final Logger log = LoggerFactory.getLogger(ErrorHandler.class);
 

@@ -1,12 +1,12 @@
 package ru.practicum.shareit.user.mapper;
 
+import org.springframework.stereotype.Component;
 import ru.practicum.shareit.common.BaseMapper;
 import ru.practicum.shareit.user.dto.UserDTO;
 import ru.practicum.shareit.user.model.User;
-import org.springframework.stereotype.Component;
 
-import java.util.stream.Collectors;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class UserMapper implements BaseMapper<UserDTO, User> {
