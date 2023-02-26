@@ -50,7 +50,8 @@ class UserServiceTest {
 
     @Test
     void shouldCreateUser() {
-        when(repository.save(any(User.class))).thenReturn(user);
+        when(repository.save(any(User.class)))
+                .thenReturn(user);
 
         UserDTO userDTO = service.addUser(mapper.toDTO(user));
 
@@ -60,14 +61,37 @@ class UserServiceTest {
     }
 
     @Test
+    void shouldCreateUserAndCheckRepositoryMethodCalls() {
+        when(repository.save(any(User.class)))
+                .thenReturn(user);
+
+        service.addUser(mapper.toDTO(user));
+
+        verify(repository, times(1))
+                .save(any(User.class));
+    }
+
+    @Test
     void shouldReturnUserById() {
-        when(repository.findById(1L)).thenReturn(Optional.of(user));
+        when(repository.findById(1L))
+                .thenReturn(Optional.of(user));
 
         UserDTO userDTO = service.getUserById(1L);
 
         assertEquals(1, userDTO.getId());
         assertEquals("Test User", userDTO.getName());
         assertEquals("test@yandex.ru", userDTO.getEmail());
+    }
+
+    @Test
+    void shouldReturnUserByIdAndCheckRepositoryMethodCalls() {
+        when(repository.findById(anyLong()))
+                .thenReturn(Optional.of(user));
+
+        service.getUserById(1L);
+
+        verify(repository, times(1))
+                .findById(1L);
     }
 
     @Test
@@ -104,6 +128,17 @@ class UserServiceTest {
     }
 
     @Test
+    void shouldReturnAllUsersAndCheckRepositoryMethodCalls() {
+        when(repository.findAll())
+                .thenReturn(List.of(user));
+
+        service.getAllUsers();
+
+        verify(repository, times(1))
+                .findAll();
+    }
+
+    @Test
     void shouldUpdateUser() {
         when(repository.findById(anyLong()))
                 .thenReturn(Optional.of(user));
@@ -116,6 +151,22 @@ class UserServiceTest {
         assertEquals(updatedUser.getId(), userDTO.getId());
         assertEquals(updatedUser.getName(), userDTO.getName());
         assertEquals(updatedUser.getEmail(), userDTO.getEmail());
+    }
+
+    @Test
+    void shouldUpdateUserAndCheckRepositoryMethodCalls() {
+        when(repository.findById(anyLong()))
+                .thenReturn(Optional.of(user));
+        when(repository.save(any(User.class)))
+                .thenReturn(user);
+
+        UserDTO userDTO = mapper.toDTO(user);
+        service.updateUser(userDTO.getId(), userDTO);
+
+        verify(repository, times(1))
+                .findById(anyLong());
+        verify(repository, times(1))
+                .save(any(User.class));
     }
 
     @Test
@@ -212,13 +263,16 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldRemoveUserById() {
+    void shouldRemoveUserByIdAndCheckRepositoryMethodCalls() {
         when(repository.findById(user.getId()))
                 .thenReturn(Optional.ofNullable(user));
 
         service.removeUserById(user.getId());
 
-        verify(repository, times(1)).deleteById(user.getId());
+        verify(repository, times(1))
+                .findById(user.getId());
+        verify(repository, times(1))
+                .deleteById(user.getId());
     }
 
     @Test

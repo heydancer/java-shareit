@@ -118,6 +118,21 @@ class ItemServiceTest {
     }
 
     @Test
+    void shouldCreateItemAndCheckRepositoryMethodCalls() {
+        when(userRepository.findById(user.getId()))
+                .thenReturn(Optional.of(user));
+        when(itemRepository.save(any(Item.class)))
+                .thenReturn(item);
+
+        service.addItem(user.getId(), itemMapper.toDTO(item));
+
+        verify(userRepository, times(1))
+                .findById(user.getId());
+        verify(itemRepository, times(1))
+                .save(any(Item.class));
+    }
+
+    @Test
     void shouldCreateItemWithNullAvailable() {
         item.setAvailable(null);
 
@@ -232,6 +247,49 @@ class ItemServiceTest {
     }
 
     @Test
+    void shouldCreateCommentAndCheckRepositoryMethodCalls() {
+        Booking booking1 = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.now().plusDays(2))
+                .end(LocalDateTime.now().plusDays(3))
+                .item(item)
+                .booker(user)
+                .build();
+
+        Booking booking2 = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.now().plusDays(5))
+                .end(LocalDateTime.now().plusDays(8))
+                .item(item)
+                .booker(user)
+                .build();
+
+        CommentDTO commentDTO = commentMapper.toDTO(comment);
+
+        when(userRepository.findById(user.getId()))
+                .thenReturn(Optional.of(user));
+        when(itemRepository.findById(item.getId()))
+                .thenReturn(Optional.of(item));
+        when(bookingRepository.findAllByBookerAndItem(anyLong(), anyLong(), any()))
+                .thenReturn(List.of(booking1, booking2));
+        when(commentMapper.toModel(commentDTO))
+                .thenReturn(comment);
+        when(commentRepository.save(comment))
+                .thenReturn(comment);
+
+        service.addComment(user.getId(), item.getId(), commentDTO);
+
+        verify(userRepository, times(1))
+                .findById(user.getId());
+        verify(itemRepository, times(1))
+                .findById(item.getId());
+        verify(bookingRepository, times(1))
+                .findAllByBookerAndItem(anyLong(), anyLong(), any());
+        verify(commentRepository, times(1))
+                .save(comment);
+    }
+
+    @Test
     void shouldReturnItemByIdWithOwner() {
         Booking booking1 = Booking.builder()
                 .id(1L)
@@ -280,6 +338,54 @@ class ItemServiceTest {
     }
 
     @Test
+    void shouldReturnItemByIdWithOwnerAndCheckRepositoryMethodCalls() {
+        Booking booking1 = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.now().plusDays(2))
+                .end(LocalDateTime.now().plusDays(3))
+                .item(item)
+                .booker(user)
+                .build();
+
+        Booking booking2 = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.now().plusDays(5))
+                .end(LocalDateTime.now().plusDays(8))
+                .item(item)
+                .booker(user)
+                .build();
+
+        SimplifiedBookingDTO simplifiedBookingDTO1 = bookingMapper.toSimpleDTO(booking1);
+        SimplifiedBookingDTO simplifiedBookingDTO2 = bookingMapper.toSimpleDTO(booking2);
+
+        item.setOwner(user);
+
+        when(itemRepository.findById(item.getId()))
+                .thenReturn(Optional.of(item));
+        when(bookingRepository.findLastBooking(anyLong(), any()))
+                .thenReturn(Optional.of(booking1));
+        when(bookingRepository.findNextBooking(anyLong(), any()))
+                .thenReturn(Optional.of(booking2));
+        when(bookingMapper.toSimpleDTO(booking1))
+                .thenReturn(simplifiedBookingDTO1);
+        when(bookingMapper.toSimpleDTO(booking2))
+                .thenReturn(simplifiedBookingDTO2);
+        when(commentRepository.findAllByItemId(item.getId()))
+                .thenReturn(List.of(comment));
+
+        service.getById(user.getId(), item.getId());
+
+        verify(itemRepository, times(1))
+                .findById(item.getId());
+        verify(bookingRepository, times(1))
+                .findLastBooking(anyLong(), any());
+        verify(bookingRepository, times(1))
+                .findNextBooking(anyLong(), any());
+        verify(commentRepository, times(1))
+                .findAllByItemId(item.getId());
+    }
+
+    @Test
     void shouldReturnItemById() {
         List<CommentDTO> comments = commentMapper.toDTOList(List.of(comment));
 
@@ -298,6 +404,23 @@ class ItemServiceTest {
         assertEquals(itemDTO.getComments(), comments);
         assertNull(itemDTO.getLastBooking());
         assertNull(itemDTO.getNextBooking());
+    }
+
+    @Test
+    void shouldReturnItemByIdAndCheckRepositoryMethodCalls() {
+        item.setOwner(user);
+
+        when(itemRepository.findById(item.getId()))
+                .thenReturn(Optional.of(item));
+        when(commentRepository.findAllByItemId(item.getId()))
+                .thenReturn(List.of(comment));
+
+        service.getById(FAKE_ID, item.getId());
+
+        verify(itemRepository, times(1))
+                .findById(item.getId());
+        verify(commentRepository, times(1))
+                .findAllByItemId(item.getId());
     }
 
     @Test
@@ -355,6 +478,51 @@ class ItemServiceTest {
     }
 
     @Test
+    void shouldReturnItemsByUserIdAndCheckRepositoryMethodCalls() {
+        Booking booking1 = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.now().plusDays(2))
+                .end(LocalDateTime.now().plusDays(3))
+                .item(item)
+                .booker(user)
+                .build();
+
+        Booking booking2 = Booking.builder()
+                .id(2L)
+                .start(LocalDateTime.now().plusDays(5))
+                .end(LocalDateTime.now().plusDays(8))
+                .item(item)
+                .booker(user)
+                .build();
+
+        item.setOwner(user);
+
+        SimplifiedBookingDTO simplifiedBookingDTO1 = bookingMapper.toSimpleDTO(booking1);
+        SimplifiedBookingDTO simplifiedBookingDTO2 = bookingMapper.toSimpleDTO(booking2);
+
+        when(itemRepository.findAllByOwnerId(anyLong(), any(PageRequest.class)))
+                .thenReturn(List.of(item));
+        when(bookingRepository.findLastBooking(anyLong(), any()))
+                .thenReturn(Optional.of(booking1));
+        when(bookingRepository.findNextBooking(anyLong(), any()))
+                .thenReturn(Optional.of(booking2));
+        when(bookingMapper.toSimpleDTO(booking1))
+                .thenReturn(simplifiedBookingDTO1);
+        when(bookingMapper.toSimpleDTO(booking2))
+                .thenReturn(simplifiedBookingDTO2);
+
+        service.getItemsByUserId(user.getId(),
+                new MyPageRequest(0, 10, Sort.unsorted()));
+
+        verify(itemRepository, times(1))
+                .findAllByOwnerId(anyLong(), any(PageRequest.class));
+        verify(bookingRepository, times(1))
+                .findLastBooking(anyLong(), any());
+        verify(bookingRepository, times(1))
+                .findNextBooking(anyLong(), any());
+    }
+
+    @Test
     void shouldReturnItemsByUserIdWithoutBookings() {
         when(itemRepository.findAllByOwnerId(anyLong(), any(PageRequest.class)))
                 .thenReturn(List.of(item));
@@ -379,6 +547,18 @@ class ItemServiceTest {
         assertEquals(items.size(), 1);
         assertEquals(items.get(0).getId(), item.getId());
         assertEquals(items.get(0).getName(), item.getName());
+    }
+
+    @Test
+    void shouldReturnItemsByTextAndCheckRepositoryMethodCalls() {
+        when(itemRepository.search(anyString(), any(PageRequest.class)))
+                .thenReturn(List.of(item));
+
+        service.getItemsByText("Test Item",
+                new MyPageRequest(0, 10, Sort.unsorted()));
+
+        verify(itemRepository, times(1))
+                .search(anyString(), any(PageRequest.class));
     }
 
     @Test
@@ -408,6 +588,31 @@ class ItemServiceTest {
 
         assertEquals(item.getId(), updatedItem.getId());
         assertFalse(updatedItem.getAvailable());
+    }
+
+    @Test
+    void shouldUpdateItemAndCheckRepositoryMethodCalls() {
+        item.setOwner(user);
+
+        ItemDTO itemForUpdate = ItemDTO.builder()
+                .available(false)
+                .build();
+
+        when(userRepository.findById(user.getId()))
+                .thenReturn(Optional.of(user));
+        when(itemRepository.findById(item.getId()))
+                .thenReturn(Optional.of(item));
+        when(itemRepository.save(any(Item.class)))
+                .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
+
+        service.updateItem(user.getId(), item.getId(), itemForUpdate);
+
+        verify(userRepository, times(1))
+                .findById(user.getId());
+        verify(itemRepository, times(1))
+                .findById(item.getId());
+        verify(itemRepository, times(1))
+                .save(any((Item.class)));
     }
 
     @Test
@@ -487,7 +692,7 @@ class ItemServiceTest {
     }
 
     @Test
-    void shouldRemoveItemById() {
+    void shouldRemoveItemByIdAndCheckRepositoryMethodCalls() {
         when(userRepository.findById(user.getId()))
                 .thenReturn(Optional.of(user));
 

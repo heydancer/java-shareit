@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -113,6 +114,27 @@ class BookingServiceTest {
     }
 
     @Test
+    void shouldAddBookingAndCheckRepositoryMethodCalls() {
+        BookingDTO bookingDTO = bookingMapper.toDTO(booking);
+
+        when(userRepository.findById(booker.getId()))
+                .thenReturn(Optional.of(booker));
+        when(itemRepository.findById(item.getId()))
+                .thenReturn(Optional.of(item));
+        when(bookingRepository.save(any(Booking.class)))
+                .thenReturn(booking);
+
+        service.addBooking(booker.getId(), bookingDTO);
+
+        verify(userRepository, times(1))
+                .findById(booker.getId());
+        verify(itemRepository, times(1))
+                .findById(item.getId());
+        verify(bookingRepository, times(1))
+                .save(any(Booking.class));
+    }
+
+    @Test
     void shouldAddBookingWithIncorrectDate() {
         booking.setEnd(LocalDateTime.now().minusDays(1));
         booking.setStart(LocalDateTime.now().plusDays(1));
@@ -190,6 +212,25 @@ class BookingServiceTest {
     }
 
     @Test
+    void shouldChangeStatusAndCheckRepositoryMethodCalls() {
+        when(userRepository.findById(owner.getId()))
+                .thenReturn(Optional.of(owner));
+        when(bookingRepository.findById(booking.getId()))
+                .thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class)))
+                .thenReturn(booking);
+
+        service.changeStatus(owner.getId(), booking.getId(), false);
+
+        verify(userRepository, times(1))
+                .findById(owner.getId());
+        verify(bookingRepository, times(1))
+                .findById(booking.getId());
+        verify(bookingRepository, times(1))
+                .save(any(Booking.class));
+    }
+
+    @Test
     void shouldChangeStatusAlreadyApproved() {
         booking.setStatus(BookingStatus.APPROVED);
 
@@ -254,6 +295,21 @@ class BookingServiceTest {
         assertEquals(bookingDTO.getId(), booking.getId());
         assertEquals(bookingDTO.getItem(), item);
         assertEquals(bookingDTO.getBooker(), booker);
+    }
+
+    @Test
+    void shouldReturnBookingAndCheckRepositoryMethodCalls() {
+        when(userRepository.findById(owner.getId()))
+                .thenReturn(Optional.of(owner));
+        when(bookingRepository.findById(booking.getId()))
+                .thenReturn(Optional.of(booking));
+
+        service.getBooking(owner.getId(), booking.getId());
+
+        verify(userRepository, times(1))
+                .findById(owner.getId());
+        verify(bookingRepository, times(2))
+                .findById(booking.getId());
     }
 
     @Test

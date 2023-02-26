@@ -29,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -86,6 +88,21 @@ class RequestServiceTest {
     }
 
     @Test
+    void shouldAddRequestAndCheckRepositoryMethodCalls() {
+        when(userRepository.findById(user.getId()))
+                .thenReturn(Optional.of(user));
+        when(requestRepository.save(any(Request.class)))
+                .thenReturn(request);
+
+        service.addRequest(user.getId(), mapper.toDTO(request));
+
+        verify(userRepository, times(1))
+                .findById(user.getId());
+        verify(requestRepository, times(1))
+                .save(any(Request.class));
+    }
+
+    @Test
     void shouldAddRequestWithIncorrectUserId() {
         when(userRepository.findById(FAKE_ID))
                 .thenThrow(new NotFoundException("User not found"));
@@ -108,6 +125,26 @@ class RequestServiceTest {
         List<RequestDTO> requestDTOS = service.getRequestListByOwnerId(user.getId());
 
         assertEquals(requestDTOS.get(0).getId(), request.getId());
+    }
+
+    @Test
+    void shouldReturnRequestListAndCheckRepositoryMethodCalls() {
+        when(userRepository.findById(user.getId()))
+                .thenReturn(Optional.of(user));
+        when(requestRepository.findAllByOwnerIdOrderByCreatedDesc(user.getId()))
+                .thenReturn(List.of(request));
+        when(itemRepository.findAllByRequestOwnerId(user.getId()))
+                .thenReturn(List.of(item));
+
+        service.getRequestListByOwnerId(user.getId());
+
+        verify(userRepository, times(1))
+                .findById(user.getId());
+        verify(requestRepository, times(1))
+                .findAllByOwnerIdOrderByCreatedDesc(user.getId());
+        verify(itemRepository, times(1))
+                .findAllByRequestOwnerId(user.getId());
+
     }
 
     @Test
@@ -137,6 +174,26 @@ class RequestServiceTest {
     }
 
     @Test
+    void shouldReturnAllRequestListAndCheckRepositoryMethodCalls() {
+        when(userRepository.findById(user.getId()))
+                .thenReturn(Optional.of(user));
+        when(requestRepository.findAllByPageable(anyLong(), any(Pageable.class)))
+                .thenReturn(List.of(request));
+        when(itemRepository.findAllByRequestIds(List.of(request.getId())))
+                .thenReturn(List.of(item));
+
+        service.getAllRequestList(user.getId(),
+                new MyPageRequest(0, 10, Sort.unsorted()));
+
+        verify(userRepository, times(1))
+                .findById(user.getId());
+        verify(requestRepository, times(1))
+                .findAllByPageable(anyLong(), any(Pageable.class));
+        verify(itemRepository, times(1))
+                .findAllByRequestIds(List.of(request.getId()));
+    }
+
+    @Test
     void shouldReturnAllRequestListByIncorrectUserId() {
         when(userRepository.findById(FAKE_ID))
                 .thenThrow(new NotFoundException("User not found"));
@@ -160,6 +217,25 @@ class RequestServiceTest {
         RequestDTO requestDTO = service.getRequestById(user.getId(), request.getId());
 
         assertEquals(requestDTO.getId(), request.getId());
+    }
+
+    @Test
+    void shouldReturnRequestByIdAndCheckRepositoryMethodCalls() {
+        when(userRepository.findById(user.getId()))
+                .thenReturn(Optional.of(user));
+        when(requestRepository.findById(request.getId()))
+                .thenReturn(Optional.of(request));
+        when(itemRepository.findAllByRequestId(request.getId()))
+                .thenReturn(List.of(item));
+
+        service.getRequestById(user.getId(), request.getId());
+
+        verify(userRepository, times(1))
+                .findById(user.getId());
+        verify(requestRepository, times(1))
+                .findById(request.getId());
+        verify(itemRepository, times(1))
+                .findAllByRequestId(request.getId());
     }
 
     @Test
