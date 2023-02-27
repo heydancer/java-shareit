@@ -1,10 +1,10 @@
 package ru.practicum.shareit.booking.mapper;
 
-import ru.practicum.shareit.booking.model.Booking;
+import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.dto.BookingDTO;
 import ru.practicum.shareit.booking.dto.SimplifiedBookingDTO;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.common.BaseMapper;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;

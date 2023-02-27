@@ -1,12 +1,12 @@
 package ru.practicum.shareit.item.mapper;
 
+import org.springframework.stereotype.Component;
 import ru.practicum.shareit.common.BaseMapper;
 import ru.practicum.shareit.item.dto.CommentDTO;
 import ru.practicum.shareit.item.model.Comment;
-import org.springframework.stereotype.Component;
 
-import java.util.stream.Collectors;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class CommentMapper implements BaseMapper<CommentDTO, Comment> {

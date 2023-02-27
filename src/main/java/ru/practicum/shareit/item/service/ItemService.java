@@ -1,7 +1,13 @@
 package ru.practicum.shareit.item.service;
 
-import ru.practicum.shareit.booking.model.Booking;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -13,13 +19,10 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.model.Request;
+import ru.practicum.shareit.request.repository.RequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,41 +35,51 @@ public class ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final RequestRepository requestRepository;
     private final BookingMapper bookingMapper;
     private final CommentMapper commentMapper;
     private final ItemMapper itemMapper;
 
     @Autowired
-    public ItemService(ItemRepository itemRepository,
-                       UserRepository userRepository,
-                       BookingRepository bookingRepository,
-                       CommentRepository commentRepository,
-                       BookingMapper bookingMapper,
-                       CommentMapper commentMapper,
-                       ItemMapper itemMapper) {
+    public ItemService(ItemRepository itemRepository, UserRepository userRepository, BookingRepository bookingRepository, CommentRepository commentRepository, RequestRepository itemRequestRepository, BookingMapper bookingMapper, CommentMapper commentMapper, ItemMapper itemMapper) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
         this.commentRepository = commentRepository;
+        this.requestRepository = itemRequestRepository;
         this.bookingMapper = bookingMapper;
         this.commentMapper = commentMapper;
         this.itemMapper = itemMapper;
     }
 
-    public ItemDTO addItem(long userId, ItemDTO itemDto) {
-        Item item = itemMapper.toModel(itemDto);
-        validate(item, userId);
+    public ItemDTO addItem(long userId, ItemDTO itemDTO) {
+        validate(itemDTO, userId);
+
+        Item item;
+        Request request = null;
+
+        if (itemDTO.getRequestId() != null) {
+            request = requestRepository.findById(itemDTO.getRequestId())
+                    .orElseThrow(() -> new NotFoundException("Request not found"));
+        }
 
         log.info("Adding item");
 
-        return itemMapper.toDTO(itemRepository.save(item));
+        if (request != null) {
+            item = itemRepository.save(itemMapper.toModel(itemDTO, request));
+            itemDTO.setId(item.getId());
+            itemDTO.setRequestId(request.getId());
+        } else {
+            item = itemRepository.save(itemMapper.toModel(itemDTO));
+            itemDTO.setId(item.getId());
+        }
+
+        return itemDTO;
     }
 
     public CommentDTO addComment(long userId, long itemId, CommentDTO commentDTO) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Item not found"));
 
         List<Booking> bookings = bookingRepository.findAllByBookerAndItem(userId, itemId, LocalDateTime.now());
 
@@ -87,8 +100,7 @@ public class ItemService {
     public ItemDTO getById(long userId, long itemId) {
         log.info("Getting item with ID: {}", itemId);
 
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found"));
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Item not found"));
 
         ItemDTO itemDTO = itemMapper.toDTO(item);
 
@@ -101,23 +113,24 @@ public class ItemService {
         return itemDTO;
     }
 
-    public List<ItemDTO> getItemsByUserId(long userId) {
+    public List<ItemDTO> getItemsByUserId(long userId, Pageable pageable) {
+
         log.info("Getting all items by user ID: {}", userId);
 
-        List<ItemDTO> items = itemMapper.toDTOList(itemRepository.findAllByOwnerId(userId));
+        List<ItemDTO> items = itemMapper.toDTOList(itemRepository.findAllByOwnerId(userId, pageable));
         items.forEach(itemDTO -> setBooking(itemDTO, itemDTO.getId()));
 
         return items;
     }
 
-    public List<ItemDTO> getItemsByText(String text) {
+    public List<ItemDTO> getItemsByText(String text, Pageable pageable) {
         log.info("Getting all items by text: {}", text);
 
         if (StringUtils.isEmpty(text)) {
             return List.of();
         }
 
-        return itemMapper.toDTOList(itemRepository.search(text.toLowerCase()));
+        return itemMapper.toDTOList(itemRepository.search(text.toLowerCase(), pageable));
     }
 
     public ItemDTO updateItem(long userId, long itemId, ItemDTO itemDto) {
@@ -130,29 +143,25 @@ public class ItemService {
     }
 
     public void removeItemById(long userId, long itemId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         itemRepository.deleteById(itemId);
     }
 
-    private void validate(Item item, long userId) {
-        if (item.getAvailable() == null) {
+    private void validate(ItemDTO itemDTO, long userId) {
+        if (itemDTO.getAvailable() == null) {
             throw new BadRequestException("Available cannot be null");
-        } else if (item.getDescription() == null) {
+        } else if (itemDTO.getDescription() == null) {
             throw new BadRequestException("Description cannot be null");
         } else {
-            item.setOwner(userRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException("User not found")));
+            itemDTO.setOwner(userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found")));
         }
     }
 
     private void checkForUpdate(long userId, long itemId, Item item) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
-        Item itemBeforeUpdate = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item not found"));
+        Item itemBeforeUpdate = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Item not found"));
 
         if (itemBeforeUpdate.getOwner().equals(user)) {
             item.setId(itemId);

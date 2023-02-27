@@ -1,14 +1,16 @@
 package ru.practicum.shareit.user.service;
 
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.dto.UserDTO;
-import ru.practicum.shareit.user.mapper.UserMapper;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.user.dto.UserDTO;
+import ru.practicum.shareit.user.mapper.UserMapper;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
 
@@ -64,14 +66,25 @@ public class UserService {
     }
 
     private void checkForUpdate(long userId, User user) {
-        User oldUser = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        User oldUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         user.setId(userId);
 
         if (user.getName() == null) {
-            user.setName(oldUser.getName());
+            if (StringUtils.isEmpty(user.getEmail())) {
+                throw new ValidationException("Email cannot be empty");
+            } else {
+                user.setName(oldUser.getName());
+            }
         } else if (user.getEmail() == null) {
-            user.setEmail(oldUser.getEmail());
+            if (StringUtils.isEmpty(user.getName())) {
+                throw new ValidationException("Name cannot be empty");
+            } else {
+                user.setEmail(oldUser.getEmail());
+            }
+        } else if (StringUtils.isEmpty(user.getName()) && StringUtils.isEmpty(user.getEmail())) {
+            throw new ValidationException("Name and Email cannot be empty");
         }
     }
 }
