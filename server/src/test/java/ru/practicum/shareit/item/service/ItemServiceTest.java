@@ -456,7 +456,7 @@ class ItemServiceTest {
         SimplifiedBookingDTO simplifiedBookingDTO1 = bookingMapper.toSimpleDTO(booking1);
         SimplifiedBookingDTO simplifiedBookingDTO2 = bookingMapper.toSimpleDTO(booking2);
 
-        when(itemRepository.findAllByOwnerId(anyLong(), any(PageRequest.class)))
+        when(itemRepository.findAllByOwnerIdOrderByIdAsc(anyLong(), any(PageRequest.class)))
                 .thenReturn(List.of(item));
         when(bookingRepository.findLastBooking(anyLong(), any()))
                 .thenReturn(Optional.of(booking1));
@@ -499,7 +499,7 @@ class ItemServiceTest {
         SimplifiedBookingDTO simplifiedBookingDTO1 = bookingMapper.toSimpleDTO(booking1);
         SimplifiedBookingDTO simplifiedBookingDTO2 = bookingMapper.toSimpleDTO(booking2);
 
-        when(itemRepository.findAllByOwnerId(anyLong(), any(PageRequest.class)))
+        when(itemRepository.findAllByOwnerIdOrderByIdAsc(anyLong(), any(PageRequest.class)))
                 .thenReturn(List.of(item));
         when(bookingRepository.findLastBooking(anyLong(), any()))
                 .thenReturn(Optional.of(booking1));
@@ -514,7 +514,7 @@ class ItemServiceTest {
                 new MyPageRequest(0, 10, Sort.unsorted()));
 
         verify(itemRepository, times(1))
-                .findAllByOwnerId(anyLong(), any(PageRequest.class));
+                .findAllByOwnerIdOrderByIdAsc(anyLong(), any(PageRequest.class));
         verify(bookingRepository, times(1))
                 .findLastBooking(anyLong(), any());
         verify(bookingRepository, times(1))
@@ -523,7 +523,7 @@ class ItemServiceTest {
 
     @Test
     void shouldReturnItemsByUserIdWithoutBookings() {
-        when(itemRepository.findAllByOwnerId(anyLong(), any(PageRequest.class)))
+        when(itemRepository.findAllByOwnerIdOrderByIdAsc(anyLong(), any(PageRequest.class)))
                 .thenReturn(List.of(item));
 
         List<ItemDTO> items = service.getItemsByUserId(user.getId(),
