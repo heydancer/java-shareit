@@ -127,7 +127,7 @@ public class ItemService {
 
         log.info("Getting all items by user ID: {}", userId);
 
-        List<ItemDTO> items = itemMapper.toDTOList(itemRepository.findAllByOwnerId(userId, pageable));
+        List<ItemDTO> items = itemMapper.toDTOList(itemRepository.findAllByOwnerIdOrderByIdAsc(userId, pageable));
         items.forEach(itemDTO -> setBooking(itemDTO, itemDTO.getId()));
 
         return items;
