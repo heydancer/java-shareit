@@ -28,9 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class BookingRepositoryTest {
     @Autowired
     private TestEntityManager entityManager;
+
     @Autowired
     private BookingRepository bookingRepository;
-
     private final Pageable pageable = new MyPageRequest(0, 10, Sort.unsorted());
 
     private final User owner = User.builder()

@@ -17,14 +17,9 @@ public class ItemDTO {
 
     @NotEmpty(message = "Description cannot be empty")
     private String description;
-
     private Boolean available;
-
     private Long requestId;
-
     private List<CommentDTO> comments;
-
     private SimplifiedBookingDTO lastBooking;
-
     private SimplifiedBookingDTO nextBooking;
 }

@@ -1,8 +1,8 @@
 package ru.practicum.shareit.request.service;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class RequestService {
     private static final Logger log = LoggerFactory.getLogger(RequestService.class);
     private final RequestRepository itemRequestRepository;
@@ -31,19 +32,6 @@ public class RequestService {
     private final RequestMapper itemRequestMapper;
     private final ItemMapper itemMapper;
     private final ItemRepository itemRepository;
-
-    @Autowired
-    public RequestService(RequestRepository itemRequestRepository,
-                          UserRepository userRepository,
-                          RequestMapper itemRequestMapper,
-                          ItemMapper itemMapper,
-                          ItemRepository itemRepository) {
-        this.itemRequestRepository = itemRequestRepository;
-        this.itemRequestMapper = itemRequestMapper;
-        this.userRepository = userRepository;
-        this.itemMapper = itemMapper;
-        this.itemRepository = itemRepository;
-    }
 
     public RequestDTO addRequest(long userId, RequestDTO requestDTO) {
         User user = checkUser(userId);

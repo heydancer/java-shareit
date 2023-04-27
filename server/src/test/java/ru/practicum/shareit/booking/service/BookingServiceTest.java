@@ -40,12 +40,16 @@ class BookingServiceTest {
     public static final long FAKE_ID = 99999L;
     @Mock
     private BookingRepository bookingRepository;
+
     @Mock
     private UserRepository userRepository;
+
     @Mock
     private ItemRepository itemRepository;
+
     @InjectMocks
     private BookingService service;
+
     @Spy
     private BookingMapper bookingMapper;
     private Booking booking;

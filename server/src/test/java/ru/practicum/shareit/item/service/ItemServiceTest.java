@@ -48,22 +48,31 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ItemServiceTest {
     public static final long FAKE_ID = 99999L;
+
     @Mock
     private ItemRepository itemRepository;
+
     @Mock
     private UserRepository userRepository;
+
     @Mock
     private RequestRepository requestRepository;
+
     @Mock
     private BookingRepository bookingRepository;
+
     @Mock
     private CommentRepository commentRepository;
+
     @InjectMocks
     private ItemService service;
+
     @Spy
     private ItemMapper itemMapper;
+
     @Spy
     private CommentMapper commentMapper;
+
     @Spy
     private BookingMapper bookingMapper;
     private Item item;

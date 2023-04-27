@@ -15,7 +15,6 @@ import ru.practicum.shareit.user.dto.UserDTO;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,14 +30,15 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
     public static final long FAKE_ID = 99999L;
+
     @Mock
     private UserRepository repository;
+
     @InjectMocks
     private UserService service;
 
     @Spy
     private UserMapper mapper;
-
     private User user;
 
     @BeforeEach

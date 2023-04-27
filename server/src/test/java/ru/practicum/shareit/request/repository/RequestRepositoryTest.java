@@ -9,7 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.common.MyPageRequest;
 import ru.practicum.shareit.request.model.Request;
-import ru.practicum.shareit.request.repository.RequestRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
@@ -22,9 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class RequestRepositoryTest {
     @Autowired
     private TestEntityManager entityManager;
+
     @Autowired
     private RequestRepository requestRepository;
-
     private final Pageable pageable = new MyPageRequest(0, 10, Sort.unsorted());
 
     private final User user = User.builder()

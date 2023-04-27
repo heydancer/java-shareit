@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.controller.ItemController;
 import ru.practicum.shareit.item.dto.CommentDTO;
 import ru.practicum.shareit.item.dto.ItemDTO;
 import ru.practicum.shareit.item.service.ItemService;
@@ -36,13 +35,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ItemController.class)
 @AutoConfigureMockMvc
 class ItemControllerTest {
-
     private static final String SHARER_USER_ID = "X-Sharer-User-Id";
     private static final long FAKE_ID = 99999L;
+
     @Autowired
     private ObjectMapper objectMapper;
+
     @Autowired
     private MockMvc mvc;
+
     @MockBean
     private ItemService service;
     private ItemDTO firstItemDTO;
@@ -108,7 +109,7 @@ class ItemControllerTest {
                 .thenThrow(new NotFoundException("User not found"));
 
         mvc.perform(post("/items")
-                        .header(SHARER_USER_ID,FAKE_ID)
+                        .header(SHARER_USER_ID, FAKE_ID)
                         .content(itemDTOJson)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());

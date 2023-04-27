@@ -32,13 +32,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RequestControllerTest {
     public static final long FAKE_ID = 99999L;
     private static final String SHARER_USER_ID = "X-Sharer-User-Id";
+
     @Autowired
     private ObjectMapper objectMapper;
+
     @Autowired
     private MockMvc mvc;
+
     @MockBean
     private RequestService service;
-
     private RequestDTO firstRequestDTO;
     private RequestDTO secondRequestDTO;
 

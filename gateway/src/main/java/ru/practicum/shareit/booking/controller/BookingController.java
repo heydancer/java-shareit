@@ -1,8 +1,8 @@
 package ru.practicum.shareit.booking.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -25,16 +25,12 @@ import javax.validation.constraints.PositiveOrZero;
 
 @Validated
 @Controller
+@RequiredArgsConstructor
 @RequestMapping(path = "/bookings")
 public class BookingController {
     private static final Logger log = LoggerFactory.getLogger(BookingController.class);
     private static final String SHARER_USER_ID = "X-Sharer-User-Id";
     private final BookingClient bookingClient;
-
-    @Autowired
-    public BookingController(BookingClient bookingClient) {
-        this.bookingClient = bookingClient;
-    }
 
     @PostMapping
     public ResponseEntity<Object> createBookings(@RequestHeader(SHARER_USER_ID) long userId,

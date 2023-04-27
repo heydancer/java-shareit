@@ -33,8 +33,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
+
     @Autowired
     private MockMvc mvc;
+
     @MockBean
     private UserClient client;
     private UserDTO firstUserDTO;

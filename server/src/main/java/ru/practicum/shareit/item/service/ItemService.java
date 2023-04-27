@@ -1,9 +1,9 @@
 package ru.practicum.shareit.item.service;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ItemService {
     private static final Logger log = LoggerFactory.getLogger(ItemService.class);
     private final ItemRepository itemRepository;
@@ -39,25 +40,6 @@ public class ItemService {
     private final BookingMapper bookingMapper;
     private final CommentMapper commentMapper;
     private final ItemMapper itemMapper;
-
-    @Autowired
-    public ItemService(ItemRepository itemRepository,
-                       UserRepository userRepository,
-                       BookingRepository bookingRepository,
-                       CommentRepository commentRepository,
-                       RequestRepository itemRequestRepository,
-                       BookingMapper bookingMapper,
-                       CommentMapper commentMapper,
-                       ItemMapper itemMapper) {
-        this.itemRepository = itemRepository;
-        this.userRepository = userRepository;
-        this.bookingRepository = bookingRepository;
-        this.commentRepository = commentRepository;
-        this.requestRepository = itemRequestRepository;
-        this.bookingMapper = bookingMapper;
-        this.commentMapper = commentMapper;
-        this.itemMapper = itemMapper;
-    }
 
     public ItemDTO addItem(long userId, ItemDTO itemDTO) {
         validate(itemDTO, userId);

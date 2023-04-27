@@ -37,10 +37,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class ItemControllerTest {
     private static final String SHARER_USER_ID = "X-Sharer-User-Id";
+
     @Autowired
     private ObjectMapper objectMapper;
+
     @Autowired
     private MockMvc mvc;
+
     @MockBean
     private ItemClient client;
     private ItemDTO firstItemDTO;

@@ -1,8 +1,8 @@
 package ru.practicum.shareit.user.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,15 +18,11 @@ import ru.practicum.shareit.user.dto.UserDTO;
 import javax.validation.Valid;
 
 @Controller
+@RequiredArgsConstructor
 @RequestMapping(path = "/users")
 public class UserController {
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserClient userClient;
-
-    @Autowired
-    public UserController(UserClient userClient) {
-        this.userClient = userClient;
-    }
 
     @PostMapping
     public ResponseEntity<Object> createUser(@Valid @RequestBody UserDTO userDTO) {

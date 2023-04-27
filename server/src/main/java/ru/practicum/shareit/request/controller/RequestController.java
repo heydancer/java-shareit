@@ -1,6 +1,6 @@
 package ru.practicum.shareit.request.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,15 +17,11 @@ import ru.practicum.shareit.request.service.RequestService;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping(path = "/requests")
 public class RequestController {
     private static final String SHARER_USER_ID = "X-Sharer-User-Id";
     private final RequestService requestService;
-
-    @Autowired
-    public RequestController(RequestService requestService) {
-        this.requestService = requestService;
-    }
 
     @PostMapping
     public RequestDTO createRequest(@RequestHeader(SHARER_USER_ID) long userId,

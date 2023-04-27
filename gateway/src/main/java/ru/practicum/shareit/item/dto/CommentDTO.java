@@ -13,8 +13,6 @@ public class CommentDTO {
 
     @NotEmpty(message = "Comment cannot be empty")
     private String text;
-
     private LocalDateTime created;
-
     private String authorName;
 }

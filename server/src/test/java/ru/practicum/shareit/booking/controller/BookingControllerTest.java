@@ -22,9 +22,9 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,12 +35,12 @@ class BookingControllerTest {
     private static final String SHARER_USER_ID = "X-Sharer-User-Id";
     @Autowired
     private ObjectMapper objectMapper;
+
     @Autowired
     private MockMvc mvc;
 
     @MockBean
     private BookingService service;
-
     private BookingDTO firstBookingDTO;
     private BookingDTO secondBookingDTO;
 

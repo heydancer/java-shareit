@@ -34,10 +34,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class UserControllerTest {
     private static final long FAKE_ID = 99999L;
+
     @Autowired
     private ObjectMapper objectMapper;
+
     @Autowired
     private MockMvc mvc;
+
     @MockBean
     private UserService service;
     private UserDTO firstUserDTO;

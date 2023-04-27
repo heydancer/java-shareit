@@ -29,10 +29,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class RequestControllerTest {
     private static final String SHARER_USER_ID = "X-Sharer-User-Id";
+
     @Autowired
     private ObjectMapper objectMapper;
+
     @Autowired
     private MockMvc mvc;
+
     @MockBean
     private RequestClient client;
     private RequestDTO firstRequestDTO;

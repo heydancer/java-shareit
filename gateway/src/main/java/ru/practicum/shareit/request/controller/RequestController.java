@@ -1,8 +1,8 @@
 package ru.practicum.shareit.request.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -22,16 +22,12 @@ import javax.validation.constraints.PositiveOrZero;
 
 @Validated
 @Controller
+@RequiredArgsConstructor
 @RequestMapping(path = "/requests")
 public class RequestController {
     private static final Logger log = LoggerFactory.getLogger(RequestController.class);
     private static final String SHARER_USER_ID = "X-Sharer-User-Id";
     private final RequestClient requestClient;
-
-    @Autowired
-    public RequestController(RequestClient requestClient) {
-        this.requestClient = requestClient;
-    }
 
     @PostMapping
     public ResponseEntity<Object> createRequest(@RequestHeader(SHARER_USER_ID) long userId,

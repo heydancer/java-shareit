@@ -1,9 +1,9 @@
 package ru.practicum.shareit.user.service;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
@@ -15,16 +15,11 @@ import ru.practicum.shareit.user.repository.UserRepository;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-
-    @Autowired
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-    }
 
     public UserDTO addUser(UserDTO userDTO) {
         User user = userMapper.toModel(userDTO);

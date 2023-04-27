@@ -31,6 +31,7 @@ public class Request {
 
     @Column(name = "description")
     private String description;
+
     @Column(name = "created")
     private LocalDateTime created;
 

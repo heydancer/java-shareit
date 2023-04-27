@@ -12,11 +12,9 @@ import java.util.List;
 @Builder
 public class RequestDTO {
     private long id;
-
     private LocalDateTime created;
 
     @NotEmpty(message = "Description cannot be empty")
     private String description;
-
     private List<ItemDTO> items;
 }
